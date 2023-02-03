@@ -72,6 +72,16 @@ export class UserService {
       );
     }
 
+    if (
+      typeof updateUserDto.oldPassword !== 'string' ||
+      typeof updateUserDto.newPassword !== 'string'
+    ) {
+      throw new HttpException(
+        'Request does not contain required fields',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const index = this.users.findIndex((user) => user.id === id);
     const user = this.users[index];
 
