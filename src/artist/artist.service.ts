@@ -23,6 +23,16 @@ export class ArtistService {
       );
     }
 
+    if (
+      typeof createArtistDto.name !== 'string' ||
+      typeof createArtistDto.grammy !== 'boolean'
+    ) {
+      throw new HttpException(
+        'Request does not contain required fields',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const id = uuid();
     const { name, grammy } = createArtistDto;
     const artist = { id, name, grammy };
