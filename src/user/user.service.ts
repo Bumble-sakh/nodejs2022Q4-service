@@ -21,6 +21,16 @@ export class UserService {
       );
     }
 
+    if (
+      typeof createUserDto.login !== 'string' ||
+      typeof createUserDto.password !== 'string'
+    ) {
+      throw new HttpException(
+        'Request does not contain required fields',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const id = uuid();
     const timestamp = Date.now();
     const { login, password } = createUserDto;
