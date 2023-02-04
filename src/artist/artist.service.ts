@@ -6,13 +6,16 @@ import { Artist } from './entities/artist.entity';
 import { v4 as uuid, validate } from 'uuid';
 import { HttpException } from '@nestjs/common/exceptions';
 import { HttpStatus } from '@nestjs/common/enums';
+import { Track } from 'src/track/entities/track.entity';
 
 @Injectable()
 export class ArtistService {
   artists: Artist[];
+  tracks: Track[];
 
   constructor() {
     this.artists = store.artists;
+    this.tracks = store.tracks;
   }
 
   create(createArtistDto: CreateArtistDto) {
@@ -112,7 +115,11 @@ export class ArtistService {
     const index = this.artists.findIndex((artist) => artist.id === id);
 
     if (index !== -1) {
-      //TODO should set track.artistId to null after deletion
+      this.tracks.forEach((track) => {
+        if (track.artistId === id) {
+          track.artistId = null;
+        }
+      });
 
       throw new HttpException(
         this.artists.splice(index, 1),
