@@ -7,15 +7,18 @@ import { v4 as uuid, validate } from 'uuid';
 import { HttpException } from '@nestjs/common/exceptions';
 import { HttpStatus } from '@nestjs/common/enums';
 import { Track } from 'src/track/entities/track.entity';
+import { Fav } from 'src/favs/entities/fav.entity';
 
 @Injectable()
 export class AlbumService {
   albums: Album[];
   tracks: Track[];
+  favorites: Fav;
 
   constructor() {
     this.albums = store.albums;
     this.tracks = store.tracks;
+    this.favorites = store.favorites;
   }
 
   create(createAlbumDto: CreateAlbumDto) {
@@ -132,6 +135,8 @@ export class AlbumService {
           track.albumId = null;
         }
       });
+
+      this.favorites.albums.delete(id);
 
       throw new HttpException(
         this.albums.splice(index, 1),

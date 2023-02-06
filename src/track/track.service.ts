@@ -6,13 +6,16 @@ import { Track } from './entities/track.entity';
 import { v4 as uuid, validate } from 'uuid';
 import { HttpException } from '@nestjs/common/exceptions';
 import { HttpStatus } from '@nestjs/common/enums';
+import { Fav } from 'src/favs/entities/fav.entity';
 
 @Injectable()
 export class TrackService {
   tracks: Track[];
+  favorites: Fav;
 
   constructor() {
     this.tracks = store.tracks;
+    this.favorites = store.favorites;
   }
 
   create(createTrackDto: CreateTrackDto) {
@@ -130,6 +133,8 @@ export class TrackService {
     const index = this.tracks.findIndex((track) => track.id === id);
 
     if (index !== -1) {
+      this.favorites.tracks.delete(id);
+
       throw new HttpException(
         this.tracks.splice(index, 1),
         HttpStatus.NO_CONTENT,

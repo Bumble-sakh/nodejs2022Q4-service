@@ -7,15 +7,18 @@ import { v4 as uuid, validate } from 'uuid';
 import { HttpException } from '@nestjs/common/exceptions';
 import { HttpStatus } from '@nestjs/common/enums';
 import { Track } from 'src/track/entities/track.entity';
+import { Fav } from 'src/favs/entities/fav.entity';
 
 @Injectable()
 export class ArtistService {
   artists: Artist[];
   tracks: Track[];
+  favorites: Fav;
 
   constructor() {
     this.artists = store.artists;
     this.tracks = store.tracks;
+    this.favorites = store.favorites;
   }
 
   create(createArtistDto: CreateArtistDto) {
@@ -120,6 +123,8 @@ export class ArtistService {
           track.artistId = null;
         }
       });
+
+      this.favorites.artists.delete(id);
 
       throw new HttpException(
         this.artists.splice(index, 1),
