@@ -157,7 +157,7 @@ paths:
                 $ref: '#/components/schemas/User'
         400:
           description: Bad request. body does not contain required fields
-  /users/{userId}:
+  /user/{id}:
     parameters:
       - name: userId
         in: path
@@ -244,7 +244,7 @@ paths:
           description: Bad request. userId is invalid (not uuid)
         404:
           description: User not found
-  /tracks:
+  /track:
     get:
       tags:
         - Track
@@ -294,7 +294,7 @@ paths:
                 $ref: '#/components/schemas/Track'
         400:
           description: Bad request. body does not contain required fields
-  /tracks/{id}:
+  /track/{id}:
     parameters:
       - name: id
         in: path
@@ -392,7 +392,7 @@ paths:
           description: Bad request. trackId is invalid (not uuid)
         404:
           description: Track was not found.
-  /albums:
+  /album:
     get:
       tags:
         - Album
@@ -440,7 +440,7 @@ paths:
                 $ref: '#/components/schemas/Album'
         400:
           description: Bad request. body does not contain required fields
-  /albums/{id}:
+  /album/{id}:
     parameters:
       - name: id
         in: path
@@ -511,7 +511,7 @@ paths:
           description: Bad request. albumId is invalid (not uuid)
         404:
           description: Album was not found.
-  /artists:
+  /artist:
     get:
       tags:
         - Artist
@@ -554,7 +554,7 @@ paths:
                 $ref: '#/components/schemas/Artist'
         400:
           description: Bad request. body does not contain required fields
-  /artists/{id}:
+  /artist/{id}:
     parameters:
       - name: id
         in: path
