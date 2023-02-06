@@ -37,11 +37,18 @@ export class UserService {
     const version = 1;
     const createdAt = timestamp;
     const updatedAt = timestamp;
-    const user = { id, login, password, version, createdAt, updatedAt };
+    const user = new User({
+      id,
+      login,
+      password,
+      version,
+      createdAt,
+      updatedAt,
+    });
 
     this.users.push(user);
 
-    return { id, login, version, createdAt, updatedAt };
+    return user;
   }
 
   findAll() {
@@ -58,8 +65,7 @@ export class UserService {
     const user = this.users.find((user) => user.id === id);
 
     if (user) {
-      const { id, login, version, createdAt, updatedAt } = user;
-      return { id, login, version, createdAt, updatedAt };
+      return user;
     }
 
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -109,9 +115,7 @@ export class UserService {
 
       this.users.splice(index, 1, user);
 
-      const { login, createdAt } = user;
-
-      return { id, login, version, createdAt, updatedAt };
+      return user;
     } else {
       throw new HttpException(`User not found`, HttpStatus.NOT_FOUND);
     }
