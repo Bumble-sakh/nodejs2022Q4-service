@@ -1,3 +1,7 @@
+#db
+db/data
+db/logs
+
 #.env
 .env
 
