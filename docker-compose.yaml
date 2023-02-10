@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  postgres:
+    build: ./db
+    restart: on-failure:5
+    command:
+      - "postgres"
+      - "-c"
+      - "logging_collector=true"
+      - "-c"
+      - "log_destination=csvlog"
+      - "-c"
+      - "log_directory=/var/lib/postgresql/logs"
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    env_file:
+      - .env
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+      - ./db/logs:/var/lib/postgresql/logs
+    networks:
+      - net
+
+  hls:
+    build: .
+    depends_on:
+      - postgres
+    ports:
+      - "${PORT}:${PORT}"
+    restart: on-failure:5
+    command:
+      - "npm"
+      - "start"
+    volumes:
+      - ./src:/usr/service/src
+    networks:
+      - net
+
+networks:
+  net:
+    driver: bridge
