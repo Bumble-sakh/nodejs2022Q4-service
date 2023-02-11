@@ -3,7 +3,19 @@
 ## Downloading
 
 ```
-git clone {repository URL}
+git clone https://github.com/Bumble-sakh/nodejs2022Q4-service.git
+```
+
+## Change branch
+
+```
+git checkout feat/docker
+```
+
+## Up docker container
+
+```
+npm run docker:up
 ```
 
 ## Installing NPM modules
@@ -26,14 +38,4 @@ To run all tests without authorization
 
 ```
 npm run test
-```
-
-### Auto-fix and format
-
-```
-npm run lint
-```
-
-```
-npm run format
 ```
