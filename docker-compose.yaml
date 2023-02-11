@@ -3,6 +3,7 @@ version: '3'
 services:
   postgres:
     build: ./db
+    image: bumblesakh-hls-db
     restart: on-failure:5
     command:
       - "postgres"
@@ -24,6 +25,7 @@ services:
 
   hls:
     build: .
+    image: bumblesakh-hls-app
     depends_on:
       - postgres
     ports:
