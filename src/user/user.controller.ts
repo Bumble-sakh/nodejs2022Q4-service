@@ -27,7 +27,7 @@ export class UserController {
     const updatedAt = createdAt;
     const version = 1;
 
-    return this.userService.createUser({
+    return this.userService.create({
       login,
       password,
       createdAt,
@@ -39,24 +39,24 @@ export class UserController {
   @UseInterceptors(ClassSerializerInterceptor)
   @Get()
   findAll() {
-    return this.userService.findUsers();
+    return this.userService.findAll();
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.userService.findUser({ id });
+    return this.userService.findOne({ id });
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Put(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.updateUser({ where: { id }, data: updateUserDto });
+    return this.userService.update({ where: { id }, data: updateUserDto });
   }
 
   @Delete(':id')
   @HttpCode(204)
   remove(@Param('id') id: string) {
-    return this.userService.removeUser({ id });
+    return this.userService.remove({ id });
   }
 }

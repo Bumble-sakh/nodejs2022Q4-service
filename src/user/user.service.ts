@@ -7,8 +7,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
-  users: User[];
-
   constructor(private prisma: PrismaService) {}
 
   private userAdapter(user: UserModel) {
@@ -25,7 +23,7 @@ export class UserService {
     });
   }
 
-  async createUser(data: Prisma.UserCreateInput): Promise<User> {
+  async create(data: Prisma.UserCreateInput): Promise<User> {
     if (!('login' in data) || !('password' in data)) {
       throw new HttpException(
         'Request does not contain required fields',
@@ -44,12 +42,12 @@ export class UserService {
     return this.userAdapter(user);
   }
 
-  async findUsers(): Promise<User[]> {
+  async findAll(): Promise<User[]> {
     const users = await this.prisma.user.findMany({});
     return users.map((user) => this.userAdapter(user));
   }
 
-  async findUser(where: Prisma.UserWhereUniqueInput): Promise<User | null> {
+  async findOne(where: Prisma.UserWhereUniqueInput): Promise<User | null> {
     const { id } = where;
 
     const idIsValid = validate(id);
@@ -69,7 +67,7 @@ export class UserService {
     }
   }
 
-  async updateUser(params: {
+  async update(params: {
     where: Prisma.UserWhereUniqueInput;
     data: UpdateUserDto;
   }): Promise<User> {
@@ -99,7 +97,7 @@ export class UserService {
       );
     }
 
-    const updatedUser = await this.findUser({ id });
+    const updatedUser = await this.findOne({ id });
 
     if (updatedUser) {
       if (updatedUser.password !== data.oldPassword) {
@@ -117,7 +115,7 @@ export class UserService {
     }
   }
 
-  async removeUser(where: Prisma.UserWhereUniqueInput): Promise<User> {
+  async remove(where: Prisma.UserWhereUniqueInput): Promise<User> {
     const { id } = where;
     const idIsValid = validate(id);
 
