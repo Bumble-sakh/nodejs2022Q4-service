@@ -1,87 +1,88 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { store } from '../store/store';
+import { validate } from 'uuid';
+import { PrismaService } from '../store/prisma.service';
+import { User as UserModel, Prisma } from '@prisma/client';
 import { User } from './entities/user.entity';
-import { v4 as uuid, validate } from 'uuid';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
   users: User[];
 
-  constructor() {
-    this.users = store.users;
-  }
+  constructor(private prisma: PrismaService) {}
 
-  create(createUserDto: CreateUserDto) {
-    if (!('login' in createUserDto) || !('password' in createUserDto)) {
-      throw new HttpException(
-        'Request does not contain required fields',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (
-      typeof createUserDto.login !== 'string' ||
-      typeof createUserDto.password !== 'string'
-    ) {
-      throw new HttpException(
-        'Request does not contain required fields',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const id = uuid();
-    const timestamp = Date.now();
-    const { login, password } = createUserDto;
-    const version = 1;
-    const createdAt = timestamp;
-    const updatedAt = timestamp;
-    const user = new User({
+  private userAdapter(user: UserModel) {
+    const { id, login, password, version, createdAt, updatedAt } = user;
+    const created = createdAt.getTime();
+    const updated = updatedAt.getTime();
+    return new User({
       id,
       login,
       password,
       version,
-      createdAt,
-      updatedAt,
+      createdAt: created,
+      updatedAt: updated,
     });
-
-    this.users.push(user);
-
-    return user;
   }
 
-  findAll() {
-    return this.users;
+  async createUser(data: Prisma.UserCreateInput): Promise<User> {
+    if (!('login' in data) || !('password' in data)) {
+      throw new HttpException(
+        'Request does not contain required fields',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (typeof data.login !== 'string' || typeof data.password !== 'string') {
+      throw new HttpException(
+        'Request does not contain required fields',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const user = await this.prisma.user.create({ data });
+    return this.userAdapter(user);
   }
 
-  findOne(id: string) {
+  async findUsers(): Promise<User[]> {
+    const users = await this.prisma.user.findMany({});
+    return users.map((user) => this.userAdapter(user));
+  }
+
+  async findUser(where: Prisma.UserWhereUniqueInput): Promise<User | null> {
+    const { id } = where;
+
     const idIsValid = validate(id);
 
     if (!idIsValid) {
       throw new HttpException('Id is not uuid', HttpStatus.BAD_REQUEST);
     }
 
-    const user = this.users.find((user) => user.id === id);
+    try {
+      const user = await this.prisma.user.findUnique({
+        where,
+      });
 
-    if (user) {
-      return user;
+      return this.userAdapter(user);
+    } catch (error) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
-
-    throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
+  async updateUser(params: {
+    where: Prisma.UserWhereUniqueInput;
+    data: UpdateUserDto;
+  }): Promise<User> {
+    const { where, data } = params;
+    const { id } = where;
+
     const idIsValid = validate(id);
 
     if (!idIsValid) {
       throw new HttpException('Id is not uuid', HttpStatus.BAD_REQUEST);
     }
 
-    if (
-      !('oldPassword' in updateUserDto) ||
-      !('newPassword' in updateUserDto)
-    ) {
+    if (!('oldPassword' in data) || !('newPassword' in data)) {
       throw new HttpException(
         'Request does not contain required fields',
         HttpStatus.BAD_REQUEST,
@@ -89,8 +90,8 @@ export class UserService {
     }
 
     if (
-      typeof updateUserDto.oldPassword !== 'string' ||
-      typeof updateUserDto.newPassword !== 'string'
+      typeof data.oldPassword !== 'string' ||
+      typeof data.newPassword !== 'string'
     ) {
       throw new HttpException(
         'Request does not contain required fields',
@@ -98,44 +99,36 @@ export class UserService {
       );
     }
 
-    const index = this.users.findIndex((user) => user.id === id);
-    const user = this.users[index];
+    const updatedUser = await this.findUser({ id });
 
-    if (user) {
-      if (user.password !== updateUserDto.oldPassword) {
+    if (updatedUser) {
+      if (updatedUser.password !== data.oldPassword) {
         throw new HttpException(`Old password is wrong`, HttpStatus.FORBIDDEN);
       }
 
-      const timestamp = Date.now();
-      const password = updateUserDto?.newPassword;
-      const version = user.version + 1;
-      const updatedAt = timestamp;
+      const password = data.newPassword;
+      const version = updatedUser.version + 1;
 
-      Object.assign(user, { password, version, updatedAt });
-
-      this.users.splice(index, 1, user);
-
-      return user;
-    } else {
-      throw new HttpException(`User not found`, HttpStatus.NOT_FOUND);
+      const user = await this.prisma.user.update({
+        data: { password, version },
+        where,
+      });
+      return this.userAdapter(user);
     }
   }
 
-  remove(id: string) {
+  async removeUser(where: Prisma.UserWhereUniqueInput): Promise<User> {
+    const { id } = where;
     const idIsValid = validate(id);
 
     if (!idIsValid) {
       throw new HttpException('Id is not uuid', HttpStatus.BAD_REQUEST);
     }
 
-    const index = this.users.findIndex((user) => user.id === id);
-
-    if (index !== -1) {
-      throw new HttpException(
-        this.users.splice(index, 1),
-        HttpStatus.NO_CONTENT,
-      );
-    } else {
+    try {
+      await this.prisma.user.delete({ where });
+      return;
+    } catch (error) {
       throw new HttpException(`User not found`, HttpStatus.NOT_FOUND);
     }
   }
