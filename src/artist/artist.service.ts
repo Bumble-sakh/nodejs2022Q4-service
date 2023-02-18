@@ -91,21 +91,6 @@ export class ArtistService {
       );
     }
 
-    // const index = this.artists.findIndex((artist) => artist.id === id);
-    // const artist = this.artists[index];
-
-    // if (artist) {
-    //   const { name, grammy } = updateArtistDto;
-
-    //   Object.assign(artist, { name, grammy });
-
-    //   this.artists.splice(index, 1, artist);
-
-    //   return artist;
-    // } else {
-    //   throw new HttpException(`Artist not found`, HttpStatus.NOT_FOUND);
-    // }
-
     const updatedArtist = await this.findOne({ id });
 
     if (updatedArtist) {
