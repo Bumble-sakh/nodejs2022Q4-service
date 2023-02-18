@@ -1,32 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
-import { store } from '../store/store';
-import { Album } from './entities/album.entity';
-import { v4 as uuid, validate } from 'uuid';
+import { validate } from 'uuid';
 import { HttpException } from '@nestjs/common/exceptions';
 import { HttpStatus } from '@nestjs/common/enums';
-import { Track } from 'src/track/entities/track.entity';
-import { Fav } from 'src/favs/entities/fav.entity';
+
+import { Prisma } from '@prisma/client';
+import { Album } from './entities/album.entity';
+import { PrismaService } from 'src/store/prisma.service';
 
 @Injectable()
 export class AlbumService {
-  albums: Album[];
-  tracks: Track[];
-  favorites: Fav;
+  constructor(private prisma: PrismaService) {}
 
-  constructor() {
-    this.albums = store.albums;
-    this.tracks = store.tracks;
-    this.favorites = store.favorites;
-  }
-
-  create(createAlbumDto: CreateAlbumDto) {
-    if (
-      !('name' in createAlbumDto) ||
-      !('year' in createAlbumDto) ||
-      !('artistId' in createAlbumDto)
-    ) {
+  async create(data: UpdateAlbumDto): Promise<Album> {
+    if (!('name' in data) || !('year' in data) || !('artistId' in data)) {
       throw new HttpException(
         'Request does not contain required fields',
         HttpStatus.BAD_REQUEST,
@@ -34,10 +21,9 @@ export class AlbumService {
     }
 
     if (
-      typeof createAlbumDto.name !== 'string' ||
-      typeof createAlbumDto.year !== 'number' ||
-      (typeof createAlbumDto.artistId !== 'string' &&
-        createAlbumDto.artistId !== null)
+      typeof data.name !== 'string' ||
+      typeof data.year !== 'number' ||
+      (typeof data.artistId !== 'string' && data.artistId !== null)
     ) {
       throw new HttpException(
         'Request does not contain required fields',
@@ -45,47 +31,50 @@ export class AlbumService {
       );
     }
 
-    const id = uuid();
-    const { name, year, artistId } = createAlbumDto;
-    const album = { id, name, year, artistId };
-
-    this.albums.push(album);
+    const album = await this.prisma.album.create({ data });
 
     return album;
   }
 
-  findAll() {
-    return this.albums;
+  async findAll() {
+    const albums = await this.prisma.album.findMany({});
+    return albums;
   }
 
-  findOne(id: string) {
+  async findOne(where: Prisma.AlbumWhereUniqueInput): Promise<Album | null> {
+    const { id } = where;
+
     const idIsValid = validate(id);
 
     if (!idIsValid) {
       throw new HttpException('Id is not uuid', HttpStatus.BAD_REQUEST);
     }
 
-    const album = this.albums.find((album) => album.id === id);
+    const album = await this.prisma.album.findUnique({
+      where,
+    });
 
     if (album) {
       return album;
+    } else {
+      throw new HttpException('Album not found', HttpStatus.NOT_FOUND);
     }
-
-    throw new HttpException('Album not found', HttpStatus.NOT_FOUND);
   }
 
-  update(id: string, updateAlbumDto: UpdateAlbumDto) {
+  async update(params: {
+    where: Prisma.AlbumWhereUniqueInput;
+    data: UpdateAlbumDto;
+  }): Promise<Album> {
+    const { where, data } = params;
+    const { id } = where;
+
     const idIsValid = validate(id);
 
     if (!idIsValid) {
       throw new HttpException('Id is not uuid', HttpStatus.BAD_REQUEST);
     }
 
-    if (
-      !('name' in updateAlbumDto) ||
-      !('year' in updateAlbumDto) ||
-      !('artistId' in updateAlbumDto)
-    ) {
+    if (!('name' in data) || !('year' in data) || !('artistId' in data)) {
       throw new HttpException(
         'Request does not contain required fields',
         HttpStatus.BAD_REQUEST,
@@ -93,10 +82,9 @@ export class AlbumService {
     }
 
     if (
-      typeof updateAlbumDto.name !== 'string' ||
-      typeof updateAlbumDto.year !== 'number' ||
-      (typeof updateAlbumDto.artistId !== 'string' &&
-        updateAlbumDto.artistId !== null)
+      typeof data.name !== 'string' ||
+      typeof data.year !== 'number' ||
+      (typeof data.artistId !== 'string' && data.artistId !== null)
     ) {
       throw new HttpException(
         'Request does not contain required fields',
@@ -104,15 +92,13 @@ export class AlbumService {
       );
     }
 
-    const index = this.albums.findIndex((album) => album.id === id);
-    const album = this.albums[index];
+    const updatedAlbum = await this.findOne({ id });
 
-    if (album) {
-      const { name, year, artistId } = updateAlbumDto;
-
-      Object.assign(album, { name, year, artistId });
-
-      this.albums.splice(index, 1, album);
+    if (updatedAlbum) {
+      const album = await this.prisma.album.update({
+        data,
+        where,
+      });
 
       return album;
     } else {
@@ -120,29 +106,21 @@ export class AlbumService {
     }
   }
 
-  remove(id: string) {
+  async remove(where: Prisma.AlbumWhereUniqueInput): Promise<Album> {
+    const { id } = where;
+
     const idIsValid = validate(id);
 
     if (!idIsValid) {
       throw new HttpException('Id is not uuid', HttpStatus.BAD_REQUEST);
     }
 
-    const index = this.albums.findIndex((album) => album.id === id);
+    try {
+      await this.prisma.album.delete({ where });
+      //TODO Удалить из  альбомов, избранного
 
-    if (index !== -1) {
-      this.tracks.forEach((track) => {
-        if (track.albumId === id) {
-          track.albumId = null;
-        }
-      });
-
-      this.favorites.albums.delete(id);
-
-      throw new HttpException(
-        this.albums.splice(index, 1),
-        HttpStatus.NO_CONTENT,
-      );
-    } else {
+      return;
+    } catch (error) {
       throw new HttpException(`Album not found`, HttpStatus.NOT_FOUND);
     }
   }
