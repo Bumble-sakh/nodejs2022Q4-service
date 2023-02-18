@@ -27,20 +27,12 @@ export class ArtistService {
       );
     }
 
-    // const id = uuid();
-    // const { name, grammy } = createArtistDto;
-    // const artist = { id, name, grammy };
-
-    // this.artists.push(artist);
-
-    // return artist;
     const artist = await this.prisma.artist.create({ data });
     return artist;
   }
 
   async findAll() {
     const artists = await this.prisma.artist.findMany({});
-    // return artists.map((artist) => this.userAdapter(user));
     return artists;
   }
 
