@@ -108,7 +108,6 @@ export class ArtistService {
 
     try {
       await this.prisma.artist.delete({ where });
-      //TODO Удалить из треков, альбомов, избранного
 
       return;
     } catch (error) {

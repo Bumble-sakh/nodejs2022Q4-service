@@ -117,7 +117,6 @@ export class AlbumService {
 
     try {
       await this.prisma.album.delete({ where });
-      //TODO Удалить из  альбомов, избранного
 
       return;
     } catch (error) {
