@@ -1,29 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTrackDto } from './dto/create-track.dto';
-import { UpdateTrackDto } from './dto/update-track.dto';
-import { store } from '../store/store';
 import { Track } from './entities/track.entity';
-import { v4 as uuid, validate } from 'uuid';
+import { validate } from 'uuid';
 import { HttpException } from '@nestjs/common/exceptions';
 import { HttpStatus } from '@nestjs/common/enums';
-import { Fav } from 'src/favs/entities/fav.entity';
+import { PrismaService } from 'src/store/prisma.service';
+import { Prisma } from '@prisma/client';
+import { UpdateTrackDto } from './dto/update-track.dto';
+import { CreateTrackDto } from './dto/create-track.dto';
 
 @Injectable()
 export class TrackService {
-  tracks: Track[];
-  favorites: Fav;
+  constructor(private prisma: PrismaService) {}
 
-  constructor() {
-    this.tracks = store.tracks;
-    this.favorites = store.favorites;
-  }
-
-  create(createTrackDto: CreateTrackDto) {
+  async create(data: CreateTrackDto): Promise<Track> {
     if (
-      !('name' in createTrackDto) ||
-      !('duration' in createTrackDto) ||
-      !('artistId' in createTrackDto) ||
-      !('albumId' in createTrackDto)
+      !('name' in data) ||
+      !('duration' in data) ||
+      !('artistId' in data) ||
+      !('albumId' in data)
     ) {
       throw new HttpException(
         'Request does not contain required fields',
@@ -32,12 +26,10 @@ export class TrackService {
     }
 
     if (
-      typeof createTrackDto.name !== 'string' ||
-      typeof createTrackDto.duration !== 'number' ||
-      (typeof createTrackDto.artistId !== 'string' &&
-        createTrackDto.artistId !== null) ||
-      (typeof createTrackDto.albumId !== 'string' &&
-        createTrackDto.albumId !== null)
+      typeof data.name !== 'string' ||
+      typeof data.duration !== 'number' ||
+      (typeof data.artistId !== 'string' && data.artistId !== null) ||
+      (typeof data.albumId !== 'string' && data.albumId !== null)
     ) {
       throw new HttpException(
         'Request does not contain required fields',
@@ -45,36 +37,42 @@ export class TrackService {
       );
     }
 
-    const id = uuid();
-    const { name, artistId, albumId, duration } = createTrackDto;
-    const track = { id, name, artistId, albumId, duration };
-
-    this.tracks.push(track);
-
+    const track = await this.prisma.track.create({ data });
     return track;
   }
 
-  findAll() {
-    return this.tracks;
+  async findAll() {
+    const tracks = await this.prisma.track.findMany({});
+    return tracks;
   }
 
-  findOne(id: string) {
+  async findOne(where: Prisma.TrackWhereUniqueInput): Promise<Track | null> {
+    const { id } = where;
+
     const idIsValid = validate(id);
 
     if (!idIsValid) {
       throw new HttpException('Id is not uuid', HttpStatus.BAD_REQUEST);
     }
 
-    const track = this.tracks.find((track) => track.id === id);
+    const track = await this.prisma.track.findUnique({
+      where,
+    });
 
     if (track) {
       return track;
+    } else {
+      throw new HttpException('Track not found', HttpStatus.NOT_FOUND);
     }
-
-    throw new HttpException('Track not found', HttpStatus.NOT_FOUND);
   }
 
-  update(id: string, updateTrackDto: UpdateTrackDto) {
+  async update(params: {
+    where: Prisma.TrackWhereUniqueInput;
+    data: UpdateTrackDto;
+  }): Promise<Track> {
+    const { where, data } = params;
+    const { id } = where;
+
     const idIsValid = validate(id);
 
     if (!idIsValid) {
@@ -82,10 +80,10 @@ export class TrackService {
     }
 
     if (
-      !('name' in updateTrackDto) ||
-      !('duration' in updateTrackDto) ||
-      !('artistId' in updateTrackDto) ||
-      !('albumId' in updateTrackDto)
+      !('name' in data) ||
+      !('duration' in data) ||
+      !('artistId' in data) ||
+      !('albumId' in data)
     ) {
       throw new HttpException(
         'Request does not contain required fields',
@@ -94,12 +92,10 @@ export class TrackService {
     }
 
     if (
-      typeof updateTrackDto.name !== 'string' ||
-      typeof updateTrackDto.duration !== 'number' ||
-      (typeof updateTrackDto.artistId !== 'string' &&
-        updateTrackDto.artistId !== null) ||
-      (typeof updateTrackDto.albumId !== 'string' &&
-        updateTrackDto.albumId !== null)
+      typeof data.name !== 'string' ||
+      typeof data.duration !== 'number' ||
+      (typeof data.artistId !== 'string' && data.artistId !== null) ||
+      (typeof data.albumId !== 'string' && data.albumId !== null)
     ) {
       throw new HttpException(
         'Request does not contain required fields',
@@ -107,15 +103,13 @@ export class TrackService {
       );
     }
 
-    const index = this.tracks.findIndex((track) => track.id === id);
-    const track = this.tracks[index];
+    const updatedTrack = await this.findOne({ id });
 
-    if (track) {
-      const { name, artistId, albumId, duration } = updateTrackDto;
-
-      Object.assign(track, { name, artistId, albumId, duration });
-
-      this.tracks.splice(index, 1, track);
+    if (updatedTrack) {
+      const track = await this.prisma.track.update({
+        data,
+        where,
+      });
 
       return track;
     } else {
@@ -123,23 +117,20 @@ export class TrackService {
     }
   }
 
-  remove(id: string) {
+  async remove(where: Prisma.TrackWhereUniqueInput): Promise<Track> {
+    const { id } = where;
+
     const idIsValid = validate(id);
 
     if (!idIsValid) {
       throw new HttpException('Id is not uuid', HttpStatus.BAD_REQUEST);
     }
 
-    const index = this.tracks.findIndex((track) => track.id === id);
+    try {
+      await this.prisma.track.delete({ where });
 
-    if (index !== -1) {
-      this.favorites.tracks.delete(id);
-
-      throw new HttpException(
-        this.tracks.splice(index, 1),
-        HttpStatus.NO_CONTENT,
-      );
-    } else {
+      return;
+    } catch (error) {
       throw new HttpException(`Track not found`, HttpStatus.NOT_FOUND);
     }
   }
