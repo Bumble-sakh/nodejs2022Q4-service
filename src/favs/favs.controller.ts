@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Param, Delete, HttpCode } from '@nestjs/common';
+import { Group } from '@prisma/client';
 import { FavsService } from './favs.service';
 
 @Controller('favs')
@@ -12,31 +13,49 @@ export class FavsController {
 
   @Post('track/:id')
   addTrack(@Param('id') id: string) {
-    return this.favsService.addTrack(id);
-  }
+    const data = {
+      group: Group.track,
+      itemId: id,
+    };
 
-  @Delete('track/:id')
-  removeTrack(@Param('id') id: string) {
-    return this.favsService.removeTrack(id);
+    return this.favsService.addTrack(data);
   }
 
   @Post('album/:id')
   addAlbum(@Param('id') id: string) {
-    return this.favsService.addAlbum(id);
-  }
+    const data = {
+      group: Group.album,
+      itemId: id,
+    };
 
-  @Delete('album/:id')
-  removeAlbum(@Param('id') id: string) {
-    return this.favsService.removeAlbum(id);
+    return this.favsService.addAlbum(data);
   }
 
   @Post('artist/:id')
   addArtist(@Param('id') id: string) {
-    return this.favsService.addArtist(id);
+    const data = {
+      group: Group.artist,
+      itemId: id,
+    };
+
+    return this.favsService.addArtist(data);
+  }
+
+  @Delete('track/:id')
+  @HttpCode(204)
+  removeTrack(@Param('id') id: string) {
+    return this.favsService.remove({ itemId: id });
+  }
+
+  @Delete('album/:id')
+  @HttpCode(204)
+  removeAlbum(@Param('id') id: string) {
+    return this.favsService.remove({ itemId: id });
   }
 
   @Delete('artist/:id')
+  @HttpCode(204)
   removeArtist(@Param('id') id: string) {
-    return this.favsService.removeArtist(id);
+    return this.favsService.remove({ itemId: id });
   }
 }

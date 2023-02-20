@@ -8,12 +8,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   login     String
   password  String
   version   Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Favorite  Favorite[]
 
   @@map("users")
 }
@@ -49,4 +50,20 @@ model Track {
   duration Int
 
   @@map("tracks")
+}
+
+model Favorite {
+  id     Int     @id @default(autoincrement())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+  group  Group
+  itemId String  @unique
+
+  @@map("favorites")
+}
+
+enum Group {
+  artist
+  album
+  track
 }
