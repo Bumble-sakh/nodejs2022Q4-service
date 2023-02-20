@@ -1,13 +1,9 @@
-#db
-db/data
-db/logs
-
-#.env
-.env
-
 # compiled output
-/dist
-/node_modules
+dist
+node_modules
+db
+Dockerfile
+.git
 
 # Logs
 logs
