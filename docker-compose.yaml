@@ -6,15 +6,15 @@ services:
     image: bumblesakh-hls-db
     restart: on-failure:5
     command:
-      - "postgres"
-      - "-c"
-      - "logging_collector=true"
-      - "-c"
-      - "log_destination=csvlog"
-      - "-c"
-      - "log_directory=/var/lib/postgresql/logs"
+      - 'postgres'
+      - '-c'
+      - 'logging_collector=true'
+      - '-c'
+      - 'log_destination=csvlog'
+      - '-c'
+      - 'log_directory=/var/lib/postgresql/logs'
     ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+      - '${POSTGRES_PORT}:${POSTGRES_PORT}'
     env_file:
       - .env
     volumes:
@@ -29,11 +29,12 @@ services:
     depends_on:
       - postgres
     ports:
-      - "${PORT}:${PORT}"
+      - '${PORT}:${PORT}'
     restart: on-failure:5
     command:
-      - "npm"
-      - "start"
+      - 'npm'
+      - 'run'
+      - 'start:watch'
     volumes:
       - ./src:/usr/service/src
     networks:
