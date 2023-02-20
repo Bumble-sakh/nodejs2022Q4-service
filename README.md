@@ -6,10 +6,10 @@
 git clone https://github.com/Bumble-sakh/nodejs2022Q4-service.git
 ```
 
-## Перейти на ветку `feat/docker`
+## Перейти на ветку `feat/postgres`
 
 ```
-git checkout feat/docker
+git checkout feat/postgres
 ```
 
 ## Установить зависимости
@@ -32,18 +32,32 @@ Linux bash
 cp .env.example .env
 ```
 
-## Собрать образы и поднять контейнер
+## Пересобрать образы
+
+```
+npm dun docker:build
+```
+
+## Поднять контейнер
 
 ```
 npm run docker:up
 ```
 
-## Приложение в контейнере будет запущенно в режиме наблюдения
-
----
-
-### Скрипт для сканирования уязвимостей
+## Запустить миграции
 
 ```
-npm run docker:scan
+npm run migrate:deploy
+```
+
+## Запустить приложение
+
+```
+npm start
+```
+
+## Запустить тесты
+
+```
+npm test
 ```

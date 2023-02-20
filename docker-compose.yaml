@@ -19,7 +19,6 @@ services:
       - .env
     volumes:
       - ./db/data:/var/lib/postgresql/data
-      - ./db/logs:/var/lib/postgresql/logs
     networks:
       - postgres
 
@@ -31,14 +30,11 @@ services:
     ports:
       - '${PORT}:${PORT}'
     restart: on-failure:5
-    command:
-      - 'npm'
-      - 'start'
     volumes:
       - ./src:/usr/service/src
     networks:
       - postgres
 
 networks:
-  net:
+  postgres:
     driver: bridge
