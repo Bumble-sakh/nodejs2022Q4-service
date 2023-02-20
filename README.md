@@ -1,41 +1,49 @@
 # Home Library Service
 
-## Downloading
+## Клонировать репозиторий
 
 ```
 git clone https://github.com/Bumble-sakh/nodejs2022Q4-service.git
 ```
 
-## Change branch
+## Перейти на ветку `feat/docker`
 
 ```
 git checkout feat/docker
 ```
 
-## Up docker container
-
-```
-npm run docker:up
-```
-
-## Installing NPM modules
+## Установить зависимости
 
 ```
 npm install
 ```
 
-## Running application
+## Переименовать файл `.env.example` в `.env`
+
+Windows cmd:
 
 ```
-npm start
+copy .env.example .env
 ```
 
-## Testing
-
-After application running open new terminal and enter:
-
-To run all tests without authorization
+Linux bash
 
 ```
-npm run test
+cp .env.example .env
+```
+
+## Собрать образы и поднять контейнер
+
+```
+npm run docker:up
+```
+
+## Приложение в контейнере будет запущенно в режиме наблюдения
+
+---
+
+### Скрипт для сканирования уязвимостей
+
+```
+npm run docker:scan
 ```

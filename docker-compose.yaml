@@ -31,14 +31,14 @@ services:
     ports:
       - '${PORT}:${PORT}'
     restart: on-failure:5
-    # command:
-    #   - 'npm'
-    #   - 'start'
+    command:
+      - 'npm'
+      - 'start'
     volumes:
       - ./src:/usr/service/src
     networks:
       - postgres
 
 networks:
-  postgres:
+  net:
     driver: bridge
